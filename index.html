@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <link rel="icon" type="image/webp" href="aba.webp">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Progresso - Treino Saitama</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+   <audio id="musica-rocky" src="musicarock.m4a" preload="auto" loop></audio>
+<audio id="musica-saitama" src="musicasaitama.m4a" preload="auto"></audio>
+
+    <div class="container-principal">
+        
+        <div class="painel-esquerdo">
+            <div class="card-stats">
+                <h2>Estatísticas</h2>
+                <div class="stat-main">
+                    <span class="stat-label">Total de Treinos:</span>
+                    <span id="total-treinos" class="stat-numero">0</span>
+                </div>
+                <div class="stat-main">
+                    <span class="stat-label">Sequência Atual:</span>
+                    <span id="sequencia-dias" class="stat-numero">0 dias</span>
+                </div>
+
+                <div class="subgrupo-recordes">
+                    <h3>🏆 Galeria de Recordes</h3>
+                    <div class="recorde-item">
+                        <span>Semanal:</span>
+                        <span id="recorde-semanal" class="recorde-num">0 / 7</span>
+                    </div>
+                    <div class="recorde-item">
+                        <span>Mensal:</span>
+                        <span id="recorde-mensal" class="recorde-num">0 / 30</span>
+                    </div>
+                    <div class="recorde-item">
+                        <span>Anual:</span>
+                        <span id="recorde-anual" class="recorde-num">0 / 365</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-musica">
+                <h3>🎵 Trilha de Treino</h3>
+                <button id="btn-player-rocky" onclick="controlarMusicaRocky()">▶️ Tocar Tema do Rocky</button>
+                <p class="aviso-player">Obs: Os navegadores exigem que você clique uma vez no site para liberar o som de fundo.</p>
+            </div>
+        </div>
+
+        <div class="painel-central">
+            <h1>REGISTRO DE PROGRESSO - TREINO SAITAMA</h1>
+            
+            <div class="grid-exercicios">
+                <div class="card-exercicio">
+                    <h3>FLEXÕES</h3>
+                    <div class="contador" id="qtd-flexoes">0</div>
+                    <p class="meta-alvo">Meta: 100</p>
+                    <div class="botoes-controle">
+                        <button onclick="mudarQtd('flexoes', -1)">-1</button>
+                        <button onclick="mudarQtd('flexoes', 1)">+1</button>
+                        <button onclick="mudarQtd('flexoes', 10)">+10</button>
+                    </div>
+                </div>
+
+                <div class="card-exercicio">
+                    <h3>AGACHAMENTOS</h3>
+                    <div class="contador" id="qtd-agachamentos">0</div>
+                    <p class="meta-alvo">Meta: 100</p>
+                    <div class="botoes-controle">
+                        <button onclick="mudarQtd('agachamentos', -1)">-1</button>
+                        <button onclick="mudarQtd('agachamentos', 1)">+1</button>
+                        <button onclick="mudarQtd('agachamentos', 10)">+10</button>
+                    </div>
+                </div>
+
+                <div class="card-exercicio">
+                    <h3>ABDOMINAIS</h3>
+                    <div class="contador" id="qtd-abdominais">0</div>
+                    <p class="meta-alvo">Meta: 100</p>
+                    <div class="botoes-controle">
+                        <button onclick="mudarQtd('abdominais', -1)">-1</button>
+                        <button onclick="mudarQtd('abdominais', 1)">+1</button>
+                        <button onclick="mudarQtd('abdominais', 10)">+10</button>
+                    </div>
+                </div>
+
+                <div class="card">
+    <h3>CORRIDA (KM)</h3>
+    <div id="qtd-corrida" class="contador-numero">0</div>
+    <div class="meta-texto">Meta: 10 km</div>
+    
+    <div class="botoes-controle">
+        <button onclick="mudarQtd('corrida', -1)">-1</button>
+        <button onclick="mudarQtd('corrida', 1)">+1 KM</button>
+        <button onclick="mudarQtd('corrida', 10)">+10 KM</button>
+    </div>
+</div>
+            </div>
+
+            <button id="btn-concluir">CONCLUIR TREINO DO DIA</button>
+        </div>
+
+        <div class="painel-direito">
+            <div class="calendario-container">
+                <div class="calendario-header">
+                    <span id="mes-ano">Junho 2026</span>
+                </div>
+                <div class="dias-semana">
+                    <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+                </div>
+                <div class="calendario-dias" id="calendario-dias">
+                    </div>
+                    
+            </div>
+            <button id="btn-salvar">SALVAR PROGRESSO</button>
+        </div>
+
+    </div>
+<div id="tela-superacao" class="overlay-soco">
+    <div class="efeito-impacto"></div>
+    <img src="image_710d64.webp" class="saitama-soco-img" alt="Saitama Soco">
+    <div class="container-quebra">
+        <div id="numero-antigo" class="numero-estilhacado">0</div>
+    </div>
+    <h2 class="texto-superacao">NOVO RECORDE QUEBRADO!</h2>
+</div>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+<script src="script.js"></script>
+</body>
+</html>
+<div class="ranking-container">
+    <h3>🏆 TOP 5 GUERREIROS</h3>
+    
+    <div class="registro-nome">
+        <input type="text" id="nome-usuario" placeholder="Seu nome de herói..." maxlength="12">
+        <button onclick="registrarNoRanking()">ENTRAR</button>
+    </div>
+
+    <div class="ranking-abas">
+        <button onclick="mostrarRanking('sequencia')">Sequência</button>
+        <button onclick="mostrarRanking('total')">Total Dias</button>
+    </div>
+
+    <ol id="lista-ranking">
+    <li id="rank-1">1° Vazio - 0 dias</li>
+    <li id="rank-2">2° Vazio - 0 dias</li>
+    <li id="rank-3">3° Vazio - 0 dias</li>
+    <li id="rank-4">4° Vazio - 0 dias</li>
+    <li id="rank-5">5° Vazio - 0 dias</li>
+</ol>
+</div>
