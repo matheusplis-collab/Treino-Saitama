@@ -21,6 +21,26 @@ const somRocky = document.getElementById('musica-rocky');
 const somSaitama = document.getElementById('musica-saitama');
 const btnPlayerRocky = document.getElementById('btn-player-rocky');
 
+// Configuração do Banco de Dados Público para o Treino do Saitama
+// (Substitua pelas suas chaves reais do Firebase quando criar o seu próprio painel)
+const firebaseConfig = {
+    apiKey: "AIzaSyDcWBSszVfCCoXbb9I3xjqN837v7IXOKE4",
+    authDomain: "treino-saitama.firebaseapp.com",
+    projectId: "treino-saitama",
+    storageBucket: "treino-saitama.firebasestorage.app",
+    messagingSenderId: "40811947614",
+    appId: "1:40811947614:web:962ac688186e8753e6f6cf",
+    measurementId: "G-DW9JLMTCBK"
+  };
+
+// Inicializa o Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// Tipo de ranking atual ('sequencia' ou 'total')
+let tipoRankingAtual = 'sequencia';
+
+// Inicializa o layout da página
 atualizarPainelEstatisticas();
 gerarCalendario();
 
@@ -47,6 +67,7 @@ function mudarQtd(exercicio, valor) {
     document.getElementById(`qtd-${exercicio}`).textContent = progressoDoDia[exercicio];
 }
 
+// --- BOTÃO CONCLUIR TREINO (MÁGICA UNIFICADA AQUI) ---
 document.getElementById('btn-concluir').addEventListener('click', () => {
     if (progressoDoDia.flexoes >= 100 && progressoDoDia.agachamentos >= 100 && progressoDoDia.abdominais >= 100 && progressoDoDia.corrida >= 10) {
         
@@ -57,17 +78,21 @@ document.getElementById('btn-concluir').addEventListener('click', () => {
             return;
         }
 
-        // --- SISTEMA DE TRILHA SONORA DE VITÓRIA ---
+        // Guarda a sequência antiga para verificar se vai quebrar o recorde semanal
+        let sequenciaAntiga = dadosTreino.sequenciaDias;
+
+        // Para a música de treino para tocar o som da vitória
         somRocky.pause(); 
-        somSaitama.currentTime = 0;
-        somSaitama.play().catch(e => console.log("Erro ao tocar som do Saitama:", e));
 
         dadosTreino.totalTreinos++;
         dadosTreino.sequenciaDias++;
         dadosTreino.historicoDias.push(hoje);
 
+        // Verifica se bateu o recorde semanal e dispara a animação do soco
+        let bateuRecorde = false;
         if (dadosTreino.sequenciaDias > dadosTreino.recordeSemanal) {
             dadosTreino.recordeSemanal = Math.min(dadosTreino.sequenciaDias, 7);
+            bateuRecorde = true;
         }
         if (dadosTreino.sequenciaDias > dadosTreino.recordeMensal) {
             dadosTreino.recordeMensal = Math.min(dadosTreino.sequenciaDias, 30);
@@ -81,7 +106,21 @@ document.getElementById('btn-concluir').addEventListener('click', () => {
         gerarCalendario();
         resetarContadores();
 
-        alert("🚀 INCRÍVEL! Treino do Saitama concluído com Sucesso!");
+        // Se quebrou a própria marca antiga, o Saitama entra destruindo tudo!
+        if (bateuRecorde) {
+            dispararSocoSaitama(sequenciaAntiga);
+        } else {
+            // Caso não seja recorde, toca a trilha de conclusão normal
+            somSaitama.currentTime = 0;
+            somSaitama.play().catch(e => console.log("Erro ao tocar som do Saitama:", e));
+            alert("🚀 INCRÍVEL! Treino do Saitama concluído com Sucesso!");
+        }
+
+        // Sincroniza o novo progresso com o Ranking Online se o nome estiver registrado
+        const nomeSalvo = localStorage.getItem('nomeGuerreiro');
+        if (nomeSalvo) {
+            salvarDadosNoFirebase(nomeSalvo, dadosTreino.sequenciaDias, dadosTreino.totalTreinos);
+        }
 
         somSaitama.onended = () => {
             somRocky.play().catch(e => {});
@@ -155,83 +194,38 @@ function gerarCalendario() {
         container.appendChild(divDia);
     }
 }
-function registrarNoRanking() {
-    const inputNome = document.getElementById('nome-usuario');
-    const nome = inputNome.value.trim();
 
-    if (nome === "") {
-        alert("Por favor, digite seu nome de herói para entrar no ranking!");
-        return;
-    }
-
-    alert(`Bem-vindo ao ranking, ${nome}! Agora conclua seu treino para subir de posição.`);
-    
-    // Desabilita o campo após o registro
-    inputNome.disabled = true;
-    const botao = document.querySelector('.registro-nome button');
-    botao.disabled = true;
-    botao.innerText = "OK";
-    
-    // Salva na memória local
-    localStorage.setItem('nomeGuerreiro', nome);
-
-    // Atualiza o primeiro lugar temporariamente com a sua sequência atual
-    // (Mais para frente, o Firebase vai automatizar isso para todos os seus amigos)
-    const sequenciaAtual = document.querySelector('.stat-box:nth-child(2) .contador-numero')?.innerText || "1";
-    document.getElementById('rank-1').innerHTML = `<strong>1° ${nome}</strong> - ${sequenciaAtual} dia(s)`;
-}
+// --- ANIMAÇÃO IMPACTANTE DO SOCO ---
 function dispararSocoSaitama(valorAntigo) {
     const overlay = document.getElementById('tela-superacao');
     const numElement = document.getElementById('numero-antigo');
     
-    // Define o número que vai ser quebrado
     numElement.textContent = valorAntigo;
     numElement.classList.remove('quebrar');
     
-    // Mostra a tela de animação
     overlay.style.display = 'flex';
     document.body.classList.add('tremer-tela');
 
-    // Toca o áudio de Saitama no talo se estiver configurado
-    const audioSaitama = document.getElementById('musica-saitama');
-    if (audioSaitama) {
-        audioSaitama.currentTime = 0;
-        audioSaitama.play();
+    if (somSaitama) {
+        somSaitama.currentTime = 0;
+        somSaitama.play().catch(e => console.log("Erro ao tocar áudio:", e));
     }
 
-    // Cronômetro para a quebra do número acontecer logo após o soco aparecer
     setTimeout(() => {
         numElement.classList.add('quebrar');
     }, 300);
 
-    // Remove o tremor da tela
     setTimeout(() => {
         document.body.classList.remove('tremer-tela');
     }, 400);
 
-    // Fecha a tela de comemoração após 3.5 segundos
     setTimeout(() => {
         overlay.style.display = 'none';
     }, 3500);
 }
-// Configuração do Banco de Dados Público para o Treino do Saitama
-const firebaseConfig = {
-    apiKey: "AIzaSyAs-PUB-SAITAMA-RANKING-2026",
-    authDomain: "saitama-guerreiros.firebaseapp.com",
-    projectId: "saitama-guerreiros",
-    storageBucket: "saitama-guerreiros.appspot.com",
-    messagingSenderId: "1234567890",
-    appId: "1:1234567890:web:abcdef"
-};
 
-// Inicializa o Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+// --- SISTEMA DE RANKING DO FIREBASE ---
 
-// Tipo de ranking atual ('sequencia' ou 'total')
-let tipoRankingAtual = 'sequencia';
-
-// Função para o usuário se registrar
 function registrarNoRanking() {
     const inputNome = document.getElementById('nome-usuario');
     const nome = inputNome.value.trim();
@@ -250,11 +244,10 @@ function registrarNoRanking() {
         botao.innerText = "OK";
     }
 
-    // Cria ou atualiza o guerreiro no banco de dados na nuvem
-    salvarDadosNoFirebase(nome, 0, 0); 
+    // Salva o usuário mandando o progresso real que ele já tem acumulado no app
+    salvarDadosNoFirebase(nome, dadosTreino.sequenciaDias, dadosTreino.totalTreinos); 
 }
 
-// Envia os dados para a nuvem
 function salvarDadosNoFirebase(nome, sequencia, total) {
     db.collection("guerreiros").doc(nome).set({
         nome: nome,
@@ -268,7 +261,6 @@ function salvarDadosNoFirebase(nome, sequencia, total) {
     .catch((error) => console.error("Erro ao salvar no banco: ", error));
 }
 
-// Puxa os dados da nuvem em tempo real e monta o TOP 5
 function carregarRankingOnline() {
     const campoOrdenacao = tipoRankingAtual === 'sequencia' ? 'sequencia' : 'totalDias';
     
@@ -278,7 +270,8 @@ function carregarRankingOnline() {
         .get()
         .then((querySnapshot) => {
             const lista = document.getElementById('lista-ranking');
-            lista.innerHTML = ""; // Limpa a lista antiga
+            if (!lista) return;
+            lista.innerHTML = ""; 
             
             let posicao = 1;
             querySnapshot.forEach((doc) => {
@@ -291,7 +284,6 @@ function carregarRankingOnline() {
                 posicao++;
             });
 
-            // Se vier menos de 5, preenche o resto com Vazio
             for (let i = posicao; i <= 5; i++) {
                 const itemVazio = document.createElement('li');
                 itemVazio.innerHTML = `<span>${i}° Vazio</span> <span>0 dias</span>`;
@@ -300,17 +292,15 @@ function carregarRankingOnline() {
         });
 }
 
-// Muda a aba do ranking e recarrega
 function mostrarRanking(tipo) {
     tipoRankingAtual = tipo;
     carregarRankingOnline();
 }
 
-// Executa assim que a página abre para carregar o ranking na hora
+// Configuração executada ao carregar a página
 document.addEventListener("DOMContentLoaded", () => {
     carregarRankingOnline();
     
-    // Se o cara já digitou o nome antes, deixa travado o input
     const nomeSalvo = localStorage.getItem('nomeGuerreiro');
     if (nomeSalvo) {
         const inputNome = document.getElementById('nome-usuario');
@@ -325,9 +315,3 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 });
-
-// MODIFICAÇÃO IMPORTANTE: Procure a sua função original de "CONCLUIR TREINO" 
-// e certifique-se de que quando o treino for salvo com sucesso, ela chame a linha abaixo:
-// const nomeSalvo = localStorage.getItem('nomeGuerreiro') || "Anônimo";
-// salvarDadosNoFirebase(nomeSalvo, progressoDoDia.sequencia, progressoDoDia.totalTreinos);
-
